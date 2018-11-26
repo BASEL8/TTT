@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css?family=Quicksand");
+
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        font-family: "Quicksand", sans-serif;
+      }
+
+      .container {
+        min-height: 100vh;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      button {
+        width: 50%;
+        padding: 15px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+          0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        background: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: 600;
+        font-size: 20px;
+        color: rgba(0, 0, 0, 0.708);
+      }
+
+      .container > * {
+        margin: 5px;
+      }
+
+      #root {
+        width: 300px;
+        margin: 20px auto;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      #root > div {
+        flex: 1 0 30%;
+        border: 2px solid black;
+        height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 50px;
+      }
+
+      #roundWinner {
+        margin-left: 5px;
+      }
+
+      #root > div:nth-child(1),
+      #root > div:nth-child(2),
+      #root > div:nth-child(3) {
+        border-top: none;
+      }
+
+      #root > div:nth-child(1),
+      #root > div:nth-child(4),
+      #root > div:nth-child(7) {
+        border-left: none;
+      }
+
+      #root > div:nth-child(3),
+      #root > div:nth-child(6),
+      #root > div:nth-child(9) {
+        border-right: none;
+      }
+
+      #root > div:nth-child(7),
+      #root > div:nth-child(8),
+      #root > div:nth-child(9) {
+        border-bottom: none;
+      }
+
+      #resultContainer {
+        display: flex;
+        width: 100%;
+        padding: 30px 0px;
+        text-align: center;
+      }
+
+      #resultContainer > div {
+        flex: 1 1 40%;
+        border: 1px solid black;
+        padding: 10px;
+      }
+
+      #resultContainer div:not(:last-child) {
+        border-right: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>tic tac toe</h1>
+      <h4>round winner :<span id="roundWinner"></span></h4>
+      <h4>player <span id="turn"> </span> turn</h4>
+      <div id="root"></div>
+      <label> auto restart <input type="checkbox" id="autoStart" /> </label>
+      <label>
+        AI <input type="checkbox" id="ai" />
+        <span style="color : rgba(128, 128, 128, 0.383)"
+          >-Not complete but it's work-</span
+        ></label
+      >
+      <div>
+        <div>
+          <div
+            style="background:rgba(255, 0, 0, 0.341176); width:10px; height:10px; display: inline-block"
+          ></div>
+          <p style="color:rgba(128,128,128,0.783);display: inline-block">
+            The other player will win
+          </p>
+        </div>
+        <div>
+          <div
+            style="background:rgba(0, 255, 69, 0.219608); width:10px; height:10px; display: inline-block"
+          ></div>
+          <p style="color:rgba(128,128,128,0.783);display: inline-block">
+            You have chance to win
+          </p>
+        </div>
+        <div>
+          <div
+            style="background:rgba(0, 170, 255, 0.278431); width:10px; height:10px; display: inline-block"
+          ></div>
+          <p style="color:rgba(128,128,128,0.783);display: inline-block">
+            Good start box
+          </p>
+        </div>
+      </div>
+      <button id="restart">restart</button>
+      <div>
+        <h4>round number : <span id="roundNumber"></span></h4>
+      </div>
+      <div id="resultContainer">
+        <div>X</div>
+        <div id="playerAResult"></div>
+        <div>O</div>
+        <div id="playerBResult"></div>
+      </div>
+    </div>
+    <script>
+      let info = {
+        winner: false,
+        players: null,
+        currentPlayer: null,
+        winsPatterns: [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+          [1, 4, 7],
+          [2, 5, 8],
+          [3, 6, 9],
+          [1, 5, 9],
+          [3, 5, 7]
+        ],
+        NumberOfWinsA: 0,
+        NumberOfWinsB: 0,
+        clicks: 0,
+        rounds: 1
+      };
+
+      function build() {
+        document
+          .getElementById("autoStart")
+          .addEventListener("change", function() {
+            if (this.checked == true) {
+              document.getElementById("restart").disabled = true;
+            } else {
+              document.getElementById("restart").disabled = false;
+            }
+          });
+
+        for (let i = 1; i < 10; i++) {
+          document.getElementById("root").innerHTML +=
+            '<div id="' + i + '" class="test"></div>';
+        }
+        info.players = [
+          {
+            name: "X",
+            points: [],
+            playerPlan: []
+          },
+          {
+            name: "O",
+            points: [],
+            playerPlan: []
+          }
+        ];
+        info.currentPlayer = info.players[0];
+        info.winner = false;
+        info.clicks = 0;
+        document.getElementById("playerAResult").innerHTML = info.NumberOfWinsA;
+        document.getElementById("playerBResult").innerHTML = info.NumberOfWinsB;
+        document.getElementById("turn").innerHTML = info.currentPlayer.name;
+        document.getElementById("roundNumber").innerHTML = info.rounds;
+      }
+
+      function startGame() {
+        [...document.getElementById("root").children].map(div => {
+          div.innerHTML = "";
+          div.addEventListener("click", function() {
+            if (div.innerHTML.length == 0) {
+              div.innerHTML = info.currentPlayer.name;
+              info.currentPlayer.points.push(parseInt(div.id));
+              if (document.getElementById("ai").checked == true) {
+                if (info.players[0].points.length <= 2) {
+                  mostChancesBox();
+                }
+                if (info.players[0].points.length >= 2) {
+                  otherPlayerChances();
+                }
+              }
+
+              info.clicks += 1;
+              WinnerChecker();
+              drawChecker();
+              togglePlayer();
+              document.getElementById("turn").innerHTML =
+                info.currentPlayer.name;
+            }
+          });
+        });
+      }
+
+      function WinnerChecker() {
+        function arrayContainsArray(superset, subset) {
+          return subset.every(function(value) {
+            return superset.indexOf(value) >= 0;
+          });
+        }
+        for (let i = 0; i < info.winsPatterns.length; i++) {
+          if (
+            arrayContainsArray(info.currentPlayer.points, info.winsPatterns[i])
+          ) {
+            console.log("we have a winner");
+            info.rounds += 1;
+            document.getElementById("roundNumber").innerHTML = info.rounds;
+            info.winner = true;
+            info.currentPlayer == info.players[0]
+              ? (info.NumberOfWinsA += 1)
+              : (info.NumberOfWinsB += 1);
+            document.getElementById("roundWinner").innerHTML =
+              info.currentPlayer.name;
+            info.winsPatterns[i].map(divId => {
+              document.getElementById(divId).style.backgroundColor = "green";
+              document.getElementById(divId).style.color = "white";
+            });
+            if (document.getElementById("autoStart").checked == true) {
+              setTimeout(() => {
+                document.getElementById("root").innerHTML = "";
+                build();
+                startPlayer();
+                startGame();
+              }, 3000);
+            }
+          }
+        }
+      }
+
+      function drawChecker() {
+        if (info.winner == false && info.clicks == 9) {
+          console.log("draw");
+          info.rounds += 1;
+          document.getElementById("roundWinner").innerHTML = "Draw";
+          [...document.getElementById("root").children].map(div => {
+            div.style.backgroundColor = "red";
+            div.style.color = "white";
+          });
+          if (document.getElementById("autoStart").checked == true) {
+            setTimeout(() => {
+              document.getElementById("root").innerHTML = "";
+              build();
+              startPlayer();
+              startGame();
+            }, 3000);
+          }
+        }
+      }
+
+      function startPlayer() {
+        if (info.rounds % 2 == 0) {
+          info.currentPlayer = info.players[1];
+        } else {
+          info.currentPlayer = info.players[0];
+        }
+      }
+
+      function togglePlayer() {
+        if (info.currentPlayer == info.players[0]) {
+          info.currentPlayer = info.players[1];
+        } else {
+          info.currentPlayer = info.players[0];
+        }
+      }
+
+      function reset() {
+        info.NumberOfWinsA = 0;
+        info.NumberOfWinsB = 0;
+        info.rounds = 0;
+      }
+      build();
+      startGame();
+      document.getElementById("restart").addEventListener("click", function() {
+        document.getElementById("root").innerHTML = "";
+        build();
+        startGame();
+      });
+      /*AI Test*/
+      let winsPatternsNew = info.winsPatterns;
+      function mostChancesBox() {
+        function getTheChances(player1, ai) {
+          newArray = [];
+          for (let i = 0; i < winsPatternsNew.length; i++) {
+            if (player1.points.length > 0) {
+              player1.points.map(x => {
+                if (
+                  ![...winsPatternsNew[i]].includes(x) &&
+                  !newArray.includes(winsPatternsNew[i])
+                ) {
+                  ai.playerPlan = [...ai.playerPlan, ...winsPatternsNew[i]];
+                  newArray = [...newArray, ...winsPatternsNew[i]];
+                }
+              });
+            }
+          }
+
+          var count = {};
+          ai.playerPlan.forEach(function(i) {
+            count[i] = (count[i] || 0) + 1;
+          });
+          var x = Object.keys(count).reduce(function(a, b) {
+            return count[a] > count[b] ? a : b;
+          });
+          document.getElementById(x).style.backgroundColor =
+            "rgba(0, 170, 255, 0.28)";
+          console.log(ai.playerPlan);
+          console.log(newArray);
+          console.log(count);
+        }
+        if (info.currentPlayer == info.players[0]) {
+          getTheChances(info.players[0], info.players[1]);
+        }
+      }
+
+      function otherPlayerChances() {
+        function similar(a, b) {
+          a.sort();
+          b.sort();
+          var equivalency = 0;
+          for (let i = 0; i < a.length; i++) {
+            for (let y = 0; y < b.length; y++) {
+              if (a[i] == b[y]) {
+                equivalency += 1;
+              }
+            }
+          }
+          return equivalency;
+        }
+
+        info.winsPatterns.map(num => {
+          if (
+            info.players[0].points.length > 2 &&
+            similar(info.players[1].points.sort(), num) == 2
+          ) {
+            console.log(num);
+            console.log(info.players[1].points);
+            let notSimilar = null;
+            for (let i = 0; i < num.length; i++) {
+              if (
+                info.players[1].points.indexOf(num[i]) == -1 &&
+                document.getElementById(num[i]).innerHTML == "" &&
+                info.currentPlayer == info.players[0]
+              ) {
+                document.getElementById(num[i]).style.backgroundColor =
+                  "#00ff4538";
+              }
+            }
+          }
+          if (similar(info.players[0].points.sort(), num.sort()) > 1) {
+            let notSimilar = null;
+            for (let i = 0; i < num.length; i++) {
+              if (
+                info.players[0].points.indexOf(num[i]) == -1 &&
+                document.getElementById(num[i]).innerHTML == ""
+              ) {
+                document.getElementById(num[i]).style.backgroundColor =
+                  "rgba(255, 0, 0, 0.34)";
+              }
+            }
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
